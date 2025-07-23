@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../app/generated/prisma"
 }
 
 datasource db {
@@ -34,7 +33,7 @@ model Task {
   workDone    WorkDone[]
   userId      String
   user        User         @relation(fields: [userId], references: [id])
-  priority    Int          @default(1)
+  priority    Boolean      @default(false)
   dueDate     DateTime?
   status      TaskStatus   @default(PENDING)
 
@@ -67,6 +66,7 @@ model User {
   email String  @unique
   firstName  String
   lastName   String
+  password  String? 
   tasks Task[]
 }
 
