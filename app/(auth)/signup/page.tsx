@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 const SignUpPage = () => {
     const [form, setForm] = useState({
@@ -12,6 +13,7 @@ const SignUpPage = () => {
 
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
+    const router = useRouter()
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value })
@@ -21,28 +23,35 @@ const SignUpPage = () => {
         e.preventDefault()
         setLoading(true)
         setError("")
+
         if (form.password !== form.confirmPassword) {
             setError("Passwords do not match")
             setLoading(false)
             return
         }
+
         const res = await fetch("/api/auth/signup", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(form),
         })
-        if (!res.ok) {
-            setError("Sign up failed")
+
+        if (res.ok) {
+            // Redirect to signin page after successful signup
+            router.push("/signin?message=Account created successfully")
+        } else {
+            const data = await res.json()
+            setError(data.error || "Sign up failed")
         }
         setLoading(false)
     }
-    if (loading) {
-        return <div className="text-center">Signing up...</div>
-    }
+
+    // ...existing JSX...
     return (
         <div className="max-w-md mx-auto mt-10 bg-white p-8 rounded-lg shadow-xl">
             <h2 className="text-2xl font-bold mb-6">Sign Up</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
+                {/* ...existing inputs... */}
                 <input
                     type="text"
                     name="firstName"
@@ -91,7 +100,7 @@ const SignUpPage = () => {
                 {error && <div className="text-red-500">{error}</div>}
                 <button
                     type="submit"
-                    className="w-full bg-gray-900 text-white py-2 rounded font-semibold"
+                    className="w-full bg-gray-900 text-white py-2 rounded font-semibold cursor-pointer"
                     disabled={loading}
                 >
                     {loading ? "Signing up..." : "Sign Up"}
