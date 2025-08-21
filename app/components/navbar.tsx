@@ -20,6 +20,9 @@ const Navbar = () => {
                         <span className="text-gray-300">
                             Welcome, {session.user?.name}
                         </span>
+                        <Link href="/dashboard" className="px-4 py-2 rounded hover:bg-gray-800">
+                            Dashboard
+                        </Link>
                         <button
                             onClick={() => signOut()}
                             className="px-4 py-2 rounded hover:bg-gray-800"
