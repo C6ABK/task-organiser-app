@@ -32,3 +32,30 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Failed to create task" }, { status: 500})
     }
 }
+
+export async function GET() {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorised"}, { status: 401 })
+    }
+
+    try {
+        const tasks = await prisma.task.findMany({
+            where: {
+                userId: session.user.id
+            },
+            include: {
+                category: true
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        })
+
+        return NextResponse.json({ tasks })
+    } catch (error) {
+        console.error("Error fetching tasks:", error)
+        return NextResponse.json({ error: "Failed to fetch tasks" }, {status: 500 })
+    }
+}

@@ -12,7 +12,7 @@ const DashboardPage = async () => {
     }
 
     return (
-        <div className="w-full h-screen flex flex-col md:flex-row">
+        <div className="w-full h-screen flex flex-col md:flex-row space-x-4">
             <div className="w-full">
                 <CurrentActions />
             </div>
