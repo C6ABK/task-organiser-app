@@ -58,3 +58,36 @@ export async function PATCH(
         return NextResponse.json({ error: "Failed to update task"}, {status: 500})
     }
 }
+
+export async function GET(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const { id } = await params
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorised "}, { status: 401 })
+    }
+
+    try {
+        const task = await prisma.task.findUnique({
+            where: {
+                id: id,
+                userId: session.user.id
+            },
+            include: {
+                category: true
+            }
+        })
+
+        if (!task) {
+            return NextResponse.json({ error: "Task not found" }, { status: 404 })
+        }
+
+        return NextResponse.json({ task })
+    } catch (error) {
+        console.error("Error fetching task:", error)
+        return NextResponse.json({ error: "Failed to fetch task" }, { status: 500 })
+    }
+}

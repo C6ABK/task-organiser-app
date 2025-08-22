@@ -1,4 +1,5 @@
 import { Task } from "../types/task"
+import { useRouter } from "next/navigation"
 
 type TaskCardProps = {
     task: Task
@@ -7,20 +8,28 @@ type TaskCardProps = {
 }
 
 const TaskCard = ({ task, onDelete, onComplete }: TaskCardProps) => {
-    const handleDelete = () => {
+    const router = useRouter()
+
+    const handleDelete = (e: React.MouseEvent) => {
+        e.stopPropagation()
         if (onDelete) {
             onDelete(task.id)
         }
     }
 
-    const handleComplete = () => {
+    const handleComplete = (e: React.MouseEvent) => {
+        e.stopPropagation()
         if (onComplete) {
             onComplete(task.id)
         }
     }
 
+    const handleCardClick = () => {
+        router.push(`/tasks/${task.id}`)
+    }
+
     return (
-        <div className="border p-4 rounded hover:shadow-md transition-shadow">
+        <div className="border p-4 rounded hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
             <div className="flex justify-between items-start mb-2">
                 <h3 className="font-bold text-lg">{task.title}</h3>
                 <div className="flex gap-2">

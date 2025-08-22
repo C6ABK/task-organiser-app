@@ -6,7 +6,10 @@ export type Task = {
     dueDate: string | null
     priority: boolean
     status: string
+    createdAt: string
+    updatedAt: string
     category: {
+        id: string
         name: string
     }
 }
