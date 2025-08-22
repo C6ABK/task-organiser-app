@@ -3,12 +3,16 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
-const CreateAction = () => {
-    type Category = {
-        id: string
-        name: string
-    }
+type Category = {
+    id: string
+    name: string
+}
 
+type CreateActionProps = {
+    onTaskCreated?: () => void
+}
+
+const CreateAction = ({ onTaskCreated }: CreateActionProps) => {
     const [form, setForm] = useState({
         title: "",
         description: "",
@@ -72,6 +76,10 @@ const CreateAction = () => {
                     priority: false,
                     dueDate: "",
                 })
+                
+                if(onTaskCreated){
+                    onTaskCreated()
+                }
                 router.refresh()
             } else {
                 const data = await res.json()

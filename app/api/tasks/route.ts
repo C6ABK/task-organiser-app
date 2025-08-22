@@ -49,7 +49,7 @@ export async function GET() {
                 category: true
             },
             orderBy: {
-                createdAt: 'desc'
+                reviewOn: 'asc'
             }
         })
 
