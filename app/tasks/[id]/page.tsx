@@ -21,8 +21,16 @@ type TaskDetail = {
     }
 }
 
+type NextAction = {
+    id: string
+    title: string
+    completed: boolean
+    createdAt: string
+    updatedAt: string
+}
+
 const TaskDetailPage = () => {
-    const [nextActions, setNextActions] = useState<any[]>([])
+    const [nextActions, setNextActions] = useState<NextAction[]>([])
     const [refreshActions, setRefreshActions] = useState(0)
     const [task, setTask] = useState<TaskDetail | null>(null)
     const [loading, setLoading] = useState(true)
@@ -204,7 +212,7 @@ const TaskDetailPage = () => {
                     {/* Show existing next actions */}
                     {nextActions.length > 0 && (
                         <div className="space-y-3 mb-6">
-                            {nextActions.map((action: any) => (
+                            {nextActions.map((action: NextAction) => (
                                 <div
                                     key={action.id}
                                     className="bg-gray-50 p-4 rounded border-l-4 border-blue-500"
