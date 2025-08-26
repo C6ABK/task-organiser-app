@@ -49,6 +49,8 @@ model NextAction {
   task      Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId    String
   workDone  WorkDone[] // 1-to-many with WorkDone
+  createdAt DateTime   @default(now())
+  updateAt  DateTime   @updatedAt
 }
 
 model WorkDone {
@@ -62,12 +64,12 @@ model WorkDone {
 }
 
 model User {
-  id    String  @id @default(cuid())
-  email String  @unique
-  firstName  String
-  lastName   String
-  password  String? 
-  tasks Task[]
+  id        String  @id @default(cuid())
+  email     String  @unique
+  firstName String
+  lastName  String
+  password  String?
+  tasks     Task[]
 }
 
 enum TaskStatus {
