@@ -50,7 +50,7 @@ model NextAction {
   taskId    String
   workDone  WorkDone[] // 1-to-many with WorkDone
   createdAt DateTime   @default(now())
-  updateAt  DateTime   @updatedAt
+  updatedAt DateTime   @updatedAt
 }
 
 model WorkDone {

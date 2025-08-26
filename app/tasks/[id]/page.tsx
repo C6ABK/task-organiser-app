@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 
+import NextActionForm from "@/app/components/NextActionForm"
+
 type TaskDetail = {
     id: string
     title: string
@@ -20,6 +22,8 @@ type TaskDetail = {
 }
 
 const TaskDetailPage = () => {
+    const [nextActions, setNextActions] = useState<any[]>([])
+    const [refreshActions, setRefreshActions] = useState(0)
     const [task, setTask] = useState<TaskDetail | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
@@ -31,6 +35,28 @@ const TaskDetailPage = () => {
         if (status === "loading") return
         if (!session) router.push("/signin")
     }, [session, status, router])
+
+    useEffect(() => {
+        const fetchNextActions = async () => {
+            if (!params.id || !session) return
+
+            try {
+                const res = await fetch(`/api/tasks/${params.id}/next-actions`)
+                if (res.ok) {
+                    const data = await res.json()
+                    setNextActions(data.nextActions)
+                }
+            } catch (error) {
+                console.error("Failed to fetch next actions:", error)
+            }
+        }
+
+        fetchNextActions()
+    }, [params.id, session, refreshActions])
+
+    const handleActionCreated = () => {
+        setRefreshActions((prev) => prev + 1)
+    }
 
     useEffect(() => {
         const fetchTask = async () => {
@@ -172,9 +198,48 @@ const TaskDetailPage = () => {
                 {/* Future sections for next actions and work done */}
                 <div className="border-t pt-8">
                     <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                        Next Actions
+                        Next Actions ({nextActions.length})
                     </h2>
-                    <p className="text-gray-500 italic">Coming soon...</p>
+
+                    {/* Show existing next actions */}
+                    {nextActions.length > 0 && (
+                        <div className="space-y-3 mb-6">
+                            {nextActions.map((action: any) => (
+                                <div
+                                    key={action.id}
+                                    className="bg-gray-50 p-4 rounded border-l-4 border-blue-500"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="font-semibold">
+                                            {action.title}
+                                        </h4>
+                                        <span
+                                            className={`text-xs px-2 py-1 rounded ${
+                                                action.completed
+                                                    ? "bg-green-100 text-green-800"
+                                                    : "bg-yellow-100 text-yellow-800"
+                                            }`}
+                                        >
+                                            {action.completed
+                                                ? "COMPLETED"
+                                                : "PENDING"}
+                                        </span>
+                                    </div>
+                                    <span className="text-gray-400 text-xs">
+                                        {new Date(
+                                            action.createdAt
+                                        ).toLocaleDateString()}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Add the form */}
+                    <NextActionForm
+                        taskId={task.id}
+                        onActionCreated={handleActionCreated}
+                    />
                 </div>
 
                 <div className="border-t pt-8 mt-8">

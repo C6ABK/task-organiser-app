@@ -72,7 +72,7 @@ export async function GET(
 
         const nextActions = await prisma.nextAction.findMany({
             where: { taskId: id },
-            orderBy: { createdAt: 'desc'}
+            orderBy: { createdAt: 'desc' }
         })
 
         return NextResponse.json({ nextActions })
