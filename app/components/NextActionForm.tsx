@@ -89,7 +89,7 @@ const NextActionForm = ({ taskId, onActionCreated }: NextActionFormProps) => {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:opacity-50 transition-colors"
+                    className="cursor-pointer w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:opacity-50 transition-colors"
                 >
                     {loading ? "Adding..." : "Add Next Action"}
                 </button>
