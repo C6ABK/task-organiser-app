@@ -39,6 +39,11 @@ const TaskDetailPage = () => {
     const router = useRouter()
     const { data: session, status } = useSession()
 
+    const incompleteActions = nextActions.filter(
+        (action) => !action.completed
+    ).length
+    const totalActions = nextActions.length
+
     useEffect(() => {
         if (status === "loading") return
         if (!session) router.push("/signin")
@@ -64,6 +69,37 @@ const TaskDetailPage = () => {
 
     const handleActionCreated = () => {
         setRefreshActions((prev) => prev + 1)
+    }
+
+    const toggleActionComplete = async (
+        actionId: string,
+        currentStatus: boolean
+    ) => {
+        try {
+            const res = await fetch(
+                `/api/tasks/${params.id}/next-actions/${actionId}`,
+                {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ completed: !currentStatus }),
+                }
+            )
+
+            if (res.ok) {
+                // Update local state instead of refetching all actions
+                setNextActions((prevActions) =>
+                    prevActions.map((action) =>
+                        action.id === actionId
+                            ? { ...action, completed: !currentStatus }
+                            : action
+                    )
+                )
+            } else {
+                console.error("Failed to update next action")
+            }
+        } catch (error) {
+            console.error("Error updating next action:", error)
+        }
     }
 
     useEffect(() => {
@@ -206,7 +242,17 @@ const TaskDetailPage = () => {
                 {/* Future sections for next actions and work done */}
                 <div className="border-t pt-8">
                     <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                        Next Actions ({nextActions.length})
+                        Next Actions{" "}
+                        {totalActions > 0 && (
+                            <span className="text-sm text-gray-500 ml-2">
+                                ({incompleteActions} pending
+                                {totalActions > incompleteActions &&
+                                    `, ${
+                                        totalActions - incompleteActions
+                                    } completed`}
+                                )
+                            </span>
+                        )}
                     </h2>
 
                     {/* Show existing next actions */}
@@ -218,9 +264,29 @@ const TaskDetailPage = () => {
                                     className="bg-gray-50 p-4 rounded border-l-4 border-blue-500"
                                 >
                                     <div className="flex items-center justify-between">
-                                        <h4 className="font-semibold">
-                                            {action.title}
-                                        </h4>
+                                        <div className="flex items-center space-x-3">
+                                            <input
+                                                type="checkbox"
+                                                checked={action.completed}
+                                                onChange={() =>
+                                                    toggleActionComplete(
+                                                        action.id,
+                                                        action.completed
+                                                    )
+                                                }
+                                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-400 rounded"
+                                            />
+                                            <h4
+                                                className={`font-semibold ${
+                                                    action.completed
+                                                        ? "line-through text-gray-500"
+                                                        : ""
+                                                }`}
+                                            >
+                                                {action.title}
+                                            </h4>
+                                        </div>
+
                                         <span
                                             className={`text-xs px-2 py-1 rounded ${
                                                 action.completed
