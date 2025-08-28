@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
-import WorkDoneForm from "../../components/WorkDoneForm"
+import WorkDoneForm from "@/app/components/WorkDoneForm"
 
 type NextActionDetail = {
     id: string
@@ -212,7 +212,7 @@ const NextActionDetailPage = () => {
                         </div>
                     )}
 
-                    <WorkDoneForm 
+                    <WorkDoneForm
                         targetType="nextAction"
                         targetId={nextAction.id}
                         onWorkCreated={handleWorkCreated}

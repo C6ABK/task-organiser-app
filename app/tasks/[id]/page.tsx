@@ -261,20 +261,27 @@ const TaskDetailPage = () => {
                             {nextActions.map((action: NextAction) => (
                                 <div
                                     key={action.id}
-                                    className="bg-gray-50 p-4 rounded border-l-4 border-blue-500"
+                                    className="bg-gray-50 p-4 rounded border-l-4 border-blue-500 cursor-pointer hover:shadow-md transition-shadow"
+                                    onClick={() =>
+                                        router.push(
+                                            `/next-actions/${action.id}`
+                                        )
+                                    }
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center space-x-3">
                                             <input
                                                 type="checkbox"
                                                 checked={action.completed}
-                                                onChange={() =>
+                                                onClick={(e) => {
+                                                    e.stopPropagation() // Prevent navigation when clicking checkbox
                                                     toggleActionComplete(
                                                         action.id,
                                                         action.completed
                                                     )
-                                                }
-                                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-400 rounded"
+                                                }}
+                                                onChange={() => {}}
+                                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                                             />
                                             <h4
                                                 className={`font-semibold ${
@@ -286,7 +293,6 @@ const TaskDetailPage = () => {
                                                 {action.title}
                                             </h4>
                                         </div>
-
                                         <span
                                             className={`text-xs px-2 py-1 rounded ${
                                                 action.completed
@@ -299,11 +305,13 @@ const TaskDetailPage = () => {
                                                 : "PENDING"}
                                         </span>
                                     </div>
-                                    <span className="text-gray-400 text-xs">
-                                        {new Date(
-                                            action.createdAt
-                                        ).toLocaleDateString()}
-                                    </span>
+                                    <div className="ml-7">
+                                        <span className="text-gray-400 text-xs">
+                                            {new Date(
+                                                action.createdAt
+                                            ).toLocaleDateString()}
+                                        </span>
+                                    </div>
                                 </div>
                             ))}
                         </div>
