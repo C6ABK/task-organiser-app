@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 
 import NextActionForm from "@/app/components/NextActionForm"
+import WorkDoneForm from "@/app/components/WorkDoneForm"
 
 type TaskDetail = {
     id: string
@@ -29,7 +30,17 @@ type NextAction = {
     updatedAt: string
 }
 
+type WorkDone = {
+    id: string
+    description: string
+    hoursSpent: number | null
+    createdAt: string
+    updatedAt: string
+}
+
 const TaskDetailPage = () => {
+    const [workDone, setWorkDone] = useState<WorkDone[]>([])
+    const [refreshWork, setRefreshWork] = useState(0)
     const [nextActions, setNextActions] = useState<NextAction[]>([])
     const [refreshActions, setRefreshActions] = useState(0)
     const [task, setTask] = useState<TaskDetail | null>(null)
@@ -100,6 +111,27 @@ const TaskDetailPage = () => {
         } catch (error) {
             console.error("Error updating next action:", error)
         }
+    }
+
+    useEffect(() => {
+        const fetchWorkDone = async () => {
+            if (!params.id || !session) return
+
+            try {
+                const res = await fetch(`/api/tasks/${params.id}/work-done`)
+                if (res.ok) {
+                    const data = await res.json()
+                    setWorkDone(data.workDone)
+                }
+            } catch (error) {
+                console.error("Failed to fetch work done:", error)
+            }
+        }
+        fetchWorkDone()
+    }, [params.id, session, refreshWork])
+
+    const handleWorkCreated = () => {
+        setRefreshWork((prev) => prev + 1)
     }
 
     useEffect(() => {
@@ -326,9 +358,41 @@ const TaskDetailPage = () => {
 
                 <div className="border-t pt-8 mt-8">
                     <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                        Work Done
+                        Work Done ({workDone.length})
                     </h2>
-                    <p className="text-gray-500 italic">Coming soon...</p>
+
+                    {workDone.length > 0 && (
+                        <div className="space-y-3 mb-6">
+                            {workDone.map((work) => (
+                                <div
+                                    key={work.id}
+                                    className="bg-gray-50 p-4 rounded border-l-4 border-green-500"
+                                >
+                                    <p className="text-gray-800">
+                                        {work.description}
+                                    </p>
+                                    <div className="flex justify-between items-center mt-2">
+                                        <span className="text-gray-400 text-sm">
+                                            {new Date(
+                                                work.createdAt
+                                            ).toLocaleDateString()}
+                                        </span>
+                                        {work.hoursSpent && (
+                                            <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                                {work.hoursSpent}h
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <WorkDoneForm
+                        targetType="task"
+                        targetId={task.id}
+                        onWorkCreated={handleWorkCreated}
+                    />
                 </div>
             </div>
         </div>
