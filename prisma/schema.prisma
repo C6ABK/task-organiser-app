@@ -56,11 +56,14 @@ model NextAction {
 model WorkDone {
   id           String      @id @default(cuid())
   description  String
+  hoursSpent   Float?
   timestamp    DateTime    @default(now())
   taskId       String?
   nextActionId String?
   task         Task?       @relation(fields: [taskId], references: [id], onDelete: Cascade)
   nextAction   NextAction? @relation(fields: [nextActionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 model User {
