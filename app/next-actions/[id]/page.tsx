@@ -118,7 +118,10 @@ const NextActionDetailPage = () => {
         <div className="max-w-4xl mx-auto p-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
-                <button className="flex items-center text-gray-600 hover:text-gray-800">
+                <button
+                    onClick={() => router.back()}
+                    className="flex items-center text-gray-600 hover:text-gray-800 cursor-pointer"
+                >
                     ← Back to {nextAction.task.title}
                 </button>
 
