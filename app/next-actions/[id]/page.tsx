@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import WorkDoneForm from "@/app/components/WorkDoneForm"
+import ConfirmationModal from "@/app/components/ConfirmationModal"
 
 type NextActionDetail = {
     id: string
@@ -33,6 +34,25 @@ const NextActionDetailPage = () => {
     const params = useParams()
     const router = useRouter()
     const { data: session, status } = useSession()
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+
+    const handleDelete = async () => {
+        if (!nextAction) return
+
+        try {
+            const res = await fetch(`/api/next-actions/${nextAction.id}`, {
+                method: "DELETE",
+            })
+
+            if (res.ok) {
+                router.push(`/tasks/${nextAction.task.id}`)
+            } else {
+                console.error("Failed to delete next action")
+            }
+        } catch (error) {
+            console.error("Error deleting next action:", error)
+        }
+    }
 
     useEffect(() => {
         if (status === "loading") return
@@ -125,15 +145,24 @@ const NextActionDetailPage = () => {
                     ← Back to {nextAction.task.title}
                 </button>
 
-                <span
-                    className={`text-xs font-bold px-2 py-1 rounded ${
-                        nextAction.completed
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                    }`}
-                >
-                    {nextAction.completed ? "COMPLETED" : "PENDING"}
-                </span>
+                <div className="flex items-center gap-3">
+                    <span
+                        className={`text-xs font-bold px-2 py-1 rounded ${
+                            nextAction.completed
+                                ? "bg-green-100 text-green-800"
+                                : "bg-yellow-100 text-yellow-800"
+                        }`}
+                    >
+                        {nextAction.completed ? "COMPLETED" : "PENDING"}
+                    </span>
+
+                    <button
+                        onClick={() => setShowDeleteModal(true)}
+                        className="px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200 transition-colors text-sm cursor-pointer"
+                    >
+                        Delete
+                    </button>
+                </div>
             </div>
 
             {/* Next action content */}
@@ -222,6 +251,16 @@ const NextActionDetailPage = () => {
                     />
                 </div>
             </div>
+            <ConfirmationModal 
+                isOpen={showDeleteModal}
+                title={"Delete Next Action"}
+                message={`Are you sure you want to delete "${nextAction.title}"? This will also delete all associated work done entries. This cannot be undone.`}
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={handleDelete}
+                onCancel={() => setShowDeleteModal(false)}
+                variant="danger"
+            />
         </div>
     )
 }
