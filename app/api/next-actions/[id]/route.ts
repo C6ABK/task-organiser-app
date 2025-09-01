@@ -72,7 +72,7 @@ export async function PATCH(
 
         const updatedAction = await prisma.nextAction.update({
             where: { id },
-            data: { completed }
+            data: { completed, completedAt: completed ? new Date() : null }
         })
 
         return NextResponse.json({ nextAction: updatedAction})

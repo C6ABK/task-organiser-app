@@ -8,6 +8,7 @@ type NextActionCardProps = {
         title: string
         completed: boolean
         createdAt: string
+        completedAt: string | null
     }
     onToggleComplete: (actionId: string, currentStatus: boolean) => void
     showClickHint?: boolean
@@ -62,6 +63,11 @@ const NextActionCard = ({
             <div className="ml-7">
                 <span className="text-gray-400 text-xs">
                     {new Date(action.createdAt).toLocaleDateString()}
+                    {action.completedAt && (
+                        <span className="ml-3 text-green-600">
+                            Completed: {new Date(action.completedAt).toLocaleDateString()}
+                        </span>
+                    )}
                 </span>
             </div>
         </div>

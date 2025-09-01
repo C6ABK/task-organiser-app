@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react"
 import WorkDoneForm from "@/app/components/WorkDoneForm"
 import ConfirmationModal from "@/app/components/ConfirmationModal"
 import WorkDoneCard from "@/app/components/WorkDoneCard"
+import next from "next"
 
 type NextActionDetail = {
     id: string
@@ -13,6 +14,7 @@ type NextActionDetail = {
     completed: boolean
     createdAt: string
     updatedAt: string
+    completedAt: string | null
     task: {
         id: string
         title: string
@@ -210,6 +212,26 @@ const NextActionDetailPage = () => {
                             ).toLocaleDateString()}
                         </span>
                     </div>
+
+                    {nextAction.completedAt && (
+                        <div>
+                            <h3 className="font-semibold text-gray-600 mb-2">Completed</h3>
+                            <span className="text-green-600">
+                                {new Date(nextAction.completedAt).toLocaleDateString()}
+                            </span>
+                        </div>
+                    )}
+
+                    {nextAction.completedAt && (
+                        <div>
+                            <h3 className="font-semibold text-gray-700 mb-2">Duration</h3>
+                            <span className="text-gray-600">
+                                {Math.ceil(
+                                    (new Date(nextAction.completedAt).getTime() - new Date(nextAction.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+                                )} days
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Work done section */}

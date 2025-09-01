@@ -72,6 +72,14 @@ export async function GET(
 
         const nextActions = await prisma.nextAction.findMany({
             where: { taskId: id },
+            select: {
+                id: true,
+                title: true,
+                completed: true,
+                completedAt: true,
+                createdAt: true,
+                updatedAt: true
+            },
             orderBy: [
                 { completed: 'asc' },
                 { createdAt: 'asc' }

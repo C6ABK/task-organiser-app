@@ -48,7 +48,7 @@ export async function PATCH(
                 id: id,
                 userId: session.user.id
             },
-            data: { status },
+            data: { status, completedAt: status === "COMPLETED" ? new Date(): null },
             include: { category: true }
         })
 
