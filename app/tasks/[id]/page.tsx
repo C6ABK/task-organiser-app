@@ -53,11 +53,6 @@ const TaskDetailPage = () => {
     const router = useRouter()
     const { data: session, status } = useSession()
 
-    const incompleteActions = nextActions.filter(
-        (action) => !action.completed
-    ).length
-    const totalActions = nextActions.length
-
     const getCompletionStats = () => {
         if (nextActions.length === 0)
             return { percentage: 0, completed: 0, total: 0 }

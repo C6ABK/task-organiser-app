@@ -29,7 +29,7 @@ const TaskCard = ({ task, onDelete, onComplete }: TaskCardProps) => {
     }
 
     return (
-        <div className="border p-4 rounded hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
+        <div className={`border p-4 rounded hover:shadow-md transition-shadow cursor-pointer ${task.status === "COMPLETED" && "bg-green-100"}`} onClick={handleCardClick}>
             <div className="flex justify-between items-start mb-2">
                 <h3 className="font-bold text-lg">{task.title}</h3>
                 <div className="flex gap-2">

@@ -48,9 +48,11 @@ export async function GET() {
             include: {
                 category: true
             },
-            orderBy: {
-                reviewOn: 'asc'
-            }
+            orderBy: [
+                { status: 'asc' },      // PENDING first, IN_PROGRESS next, COMPLETED last
+                { reviewOn: 'asc' },    // Then by reviewOn date (earliest first)
+                { createdAt: 'desc' }   // Finally by creation date (newest first as tiebreaker)
+            ]
         })
 
         return NextResponse.json({ tasks })
