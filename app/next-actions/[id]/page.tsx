@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import WorkDoneForm from "@/app/components/WorkDoneForm"
 import ConfirmationModal from "@/app/components/ConfirmationModal"
+import WorkDoneCard from "@/app/components/WorkDoneCard"
 
 type NextActionDetail = {
     id: string
@@ -220,26 +221,10 @@ const NextActionDetailPage = () => {
                     {workDone.length > 0 && (
                         <div className="space-y-3 mb-6">
                             {workDone.map((work) => (
-                                <div
+                                <WorkDoneCard 
                                     key={work.id}
-                                    className="bg-gray-50 p-4 rounded border-l-4 border-green-500"
-                                >
-                                    <p className="text-gray-800">
-                                        {work.description}
-                                    </p>
-                                    <div className="flex justify-between items-center mt-2">
-                                        <span className="text-gray-400 text-sm">
-                                            {new Date(
-                                                work.createdAt
-                                            ).toLocaleDateString()}
-                                        </span>
-                                        {work.hoursSpent && (
-                                            <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                                {work.hoursSpent}h
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
+                                    work={work}
+                                />
                             ))}
                         </div>
                     )}

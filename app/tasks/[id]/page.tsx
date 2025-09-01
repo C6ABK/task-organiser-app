@@ -6,6 +6,8 @@ import { useSession } from "next-auth/react"
 
 import NextActionForm from "@/app/components/NextActionForm"
 import WorkDoneForm from "@/app/components/WorkDoneForm"
+import NextActionCard from "@/app/components/NextActionCard"
+import WorkDoneCard from "@/app/components/WorkDoneCard"
 
 type TaskDetail = {
     id: string
@@ -271,7 +273,7 @@ const TaskDetailPage = () => {
                     </div>
                 </div>
 
-                {/* Future sections for next actions and work done */}
+                {/* Next Actions & Work Done */}
                 <div className="border-t pt-8">
                     <h2 className="text-xl font-semibold text-gray-800 mb-4">
                         Next Actions{" "}
@@ -291,60 +293,12 @@ const TaskDetailPage = () => {
                     {nextActions.length > 0 && (
                         <div className="space-y-3 mb-6">
                             {nextActions.map((action: NextAction) => (
-                                <div
+                                <NextActionCard 
                                     key={action.id}
-                                    className="bg-gray-50 p-4 rounded border-l-4 border-blue-500 cursor-pointer hover:shadow-md transition-shadow"
-                                    onClick={() =>
-                                        router.push(
-                                            `/next-actions/${action.id}`
-                                        )
-                                    }
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-3">
-                                            <input
-                                                type="checkbox"
-                                                checked={action.completed}
-                                                onClick={(e) => {
-                                                    e.stopPropagation() // Prevent navigation when clicking checkbox
-                                                    toggleActionComplete(
-                                                        action.id,
-                                                        action.completed
-                                                    )
-                                                }}
-                                                onChange={() => {}}
-                                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-                                            />
-                                            <h4
-                                                className={`font-semibold ${
-                                                    action.completed
-                                                        ? "line-through text-gray-500"
-                                                        : ""
-                                                }`}
-                                            >
-                                                {action.title}
-                                            </h4>
-                                        </div>
-                                        <span
-                                            className={`text-xs px-2 py-1 rounded ${
-                                                action.completed
-                                                    ? "bg-green-100 text-green-800"
-                                                    : "bg-yellow-100 text-yellow-800"
-                                            }`}
-                                        >
-                                            {action.completed
-                                                ? "COMPLETED"
-                                                : "PENDING"}
-                                        </span>
-                                    </div>
-                                    <div className="ml-7">
-                                        <span className="text-gray-400 text-xs">
-                                            {new Date(
-                                                action.createdAt
-                                            ).toLocaleDateString()}
-                                        </span>
-                                    </div>
-                                </div>
+                                    action={action}
+                                    onToggleComplete={toggleActionComplete}
+                                    showClickHint={true}
+                                />
                             ))}
                         </div>
                     )}
@@ -364,26 +318,10 @@ const TaskDetailPage = () => {
                     {workDone.length > 0 && (
                         <div className="space-y-3 mb-6">
                             {workDone.map((work) => (
-                                <div
+                                <WorkDoneCard 
                                     key={work.id}
-                                    className="bg-gray-50 p-4 rounded border-l-4 border-green-500"
-                                >
-                                    <p className="text-gray-800">
-                                        {work.description}
-                                    </p>
-                                    <div className="flex justify-between items-center mt-2">
-                                        <span className="text-gray-400 text-sm">
-                                            {new Date(
-                                                work.createdAt
-                                            ).toLocaleDateString()}
-                                        </span>
-                                        {work.hoursSpent && (
-                                            <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                                {work.hoursSpent}h
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
+                                    work={work}
+                                />
                             ))}
                         </div>
                     )}
