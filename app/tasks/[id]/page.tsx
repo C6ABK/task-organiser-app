@@ -58,6 +58,19 @@ const TaskDetailPage = () => {
     ).length
     const totalActions = nextActions.length
 
+    const getCompletionStats = () => {
+        if (nextActions.length === 0)
+            return { percentage: 0, completed: 0, total: 0 }
+
+        const completed = nextActions.filter(
+            (action) => action.completed
+        ).length
+        const total = nextActions.length
+        const percentage = Math.round((completed / total) * 100)
+
+        return { percentage, completed, total }
+    }
+
     useEffect(() => {
         if (status === "loading") return
         if (!session) router.push("/signin")
@@ -190,7 +203,7 @@ const TaskDetailPage = () => {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <button
-                    onClick={() => router.back()}
+                    onClick={() => router.push("/dashboard")}
                     className="flex items-center text-gray-600 hover:text-gray-800 cursor-pointer"
                 >
                     ← Back
@@ -276,25 +289,48 @@ const TaskDetailPage = () => {
 
                 {/* Next Actions & Work Done */}
                 <div className="border-t pt-8">
-                    <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                        Next Actions{" "}
-                        {totalActions > 0 && (
-                            <span className="text-sm text-gray-500 ml-2">
-                                ({incompleteActions} pending
-                                {totalActions > incompleteActions &&
-                                    `, ${
-                                        totalActions - incompleteActions
-                                    } completed`}
-                                )
-                            </span>
-                        )}
-                    </h2>
+                    {(() => {
+                        const { percentage, completed, total } =
+                            getCompletionStats()
+
+                        return (
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center space-x-3">
+                                    <h2 className="text-xl font-semibold text-gray-800">
+                                        Next Actions (
+                                        {
+                                            nextActions.filter(
+                                                (action) => !action.completed
+                                            ).length
+                                        }
+                                        )
+                                    </h2>
+                                    {total > 0 && (
+                                        <div className="flex items-center space-x-2">
+                                            <div className="w-20 bg-gray-200 rounded-full h-2">
+                                                <div
+                                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                                    style={{
+                                                        width: `${percentage}%`,
+                                                    }}
+                                                />
+                                            </div>
+                                            <span className="text-sm text-gray-600 font-medium">
+                                                {percentage}% ({completed}/
+                                                {total})
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )
+                    })()}
 
                     {/* Show existing next actions */}
                     {nextActions.length > 0 && (
                         <div className="space-y-3 mb-6">
                             {nextActions.map((action: NextAction) => (
-                                <NextActionCard 
+                                <NextActionCard
                                     key={action.id}
                                     action={action}
                                     onToggleComplete={toggleActionComplete}
@@ -319,10 +355,7 @@ const TaskDetailPage = () => {
                     {workDone.length > 0 && (
                         <div className="space-y-3 mb-6">
                             {workDone.map((work) => (
-                                <WorkDoneCard 
-                                    key={work.id}
-                                    work={work}
-                                />
+                                <WorkDoneCard key={work.id} work={work} />
                             ))}
                         </div>
                     )}
