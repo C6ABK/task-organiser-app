@@ -80,7 +80,7 @@ const TaskDetailPage = () => {
     // Main data fetching - fetch everything together
     useEffect(() => {
         const fetchAllData = async () => {
-            if (!params.id || !session || status === "loading") return
+            if (status !== "authenticated" || !session || !params.id) return
 
             setLoading(true)
             setError("")
@@ -125,21 +125,6 @@ const TaskDetailPage = () => {
     // Handlers
     const handleRefresh = () => {
         setRefreshTrigger((prev) => prev + 1)
-    }
-
-    const handleActionCreated = (newAction: NextAction) => {
-        // Optimistically add the new action to the UI
-        setNextActions((prev) => [...prev, newAction])
-    }
-
-    const handleTaskUpdated = (updatedTask: Partial<TaskDetail>) => {
-        // Optimistically update just the task fields that changed
-        setTask((prev) => (prev ? { ...prev, ...updatedTask } : null))
-    }
-
-    const handleWorkCreated = (newWork: WorkDone) => {
-        // Optimistically add the new work entry
-        setWorkDone((prev) => [newWork, ...prev])
     }
 
     const toggleActionComplete = async (
