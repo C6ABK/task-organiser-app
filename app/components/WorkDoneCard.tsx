@@ -27,7 +27,7 @@ const WorkDoneCard = ({
     return (
         <div
             onClick={handleClick}
-            className="bg-gray-50 p-4 rounded border-l-4 border-green-500"
+            className="bg-gray-50 p-4 rounded border-l-4 border-green-500 cursor-pointer"
         >
             <div className="flex justify-between items-start mb-2">
                 <p className="text-gray-800 flex-1">{work.description}</p>

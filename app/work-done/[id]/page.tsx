@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
+import ConfirmationModal from "@/app/components/ConfirmationModal" // Add this import
 
 interface WorkDone {
     id: string
@@ -21,7 +22,7 @@ const WorkDoneDetailPage = ({ params }: { params: { id: string } }) => {
     const [editDescription, setEditDescription] = useState("")
     const [error, setError] = useState("")
     const [success, setSuccess] = useState("")
-    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [showDeleteModal, setShowDeleteModal] = useState(false) // Add this state
 
     const router = useRouter()
     const { data: session, status } = useSession()
@@ -35,7 +36,6 @@ const WorkDoneDetailPage = ({ params }: { params: { id: string } }) => {
     }, [session, status, router])
 
     // Fetch work done details
-
     useEffect(() => {
         if (!session) return
 
@@ -71,7 +71,7 @@ const WorkDoneDetailPage = ({ params }: { params: { id: string } }) => {
 
         try {
             const response = await fetch(`/api/work-done/${params.id}`, {
-                method: "PUT",
+                method: "PATCH", // Change to PATCH
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ description: editDescription.trim() }),
             })
@@ -94,10 +94,7 @@ const WorkDoneDetailPage = ({ params }: { params: { id: string } }) => {
     }
 
     const handleDelete = async () => {
-        if (!confirm("Are you sure you want to delete this work done item?")) {
-            return
-        }
-
+        setShowDeleteModal(false) // Close modal first
         setLoading(true)
 
         try {
@@ -109,11 +106,11 @@ const WorkDoneDetailPage = ({ params }: { params: { id: string } }) => {
                 router.push(`/tasks/${workDone?.taskId}`)
             } else {
                 setError("Failed to delete work done item")
-                setLoading(false)
             }
         } catch (error) {
             console.error("Error deleting work done:", error)
             setError("Failed to delete work done item")
+        } finally {
             setLoading(false)
         }
     }
@@ -211,14 +208,14 @@ const WorkDoneDetailPage = ({ params }: { params: { id: string } }) => {
                             <>
                                 <button
                                     onClick={() => setEditing(true)}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+                                    className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
                                     disabled={loading}
                                 >
                                     Edit
                                 </button>
                                 <button
-                                    onClick={handleDelete}
-                                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:opacity-50"
+                                    onClick={() => setShowDeleteModal(true)} // Show modal instead
+                                    className="cursor-pointer bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:opacity-50"
                                     disabled={loading}
                                 >
                                     Delete
@@ -228,7 +225,7 @@ const WorkDoneDetailPage = ({ params }: { params: { id: string } }) => {
                             <>
                                 <button
                                     onClick={handleEdit}
-                                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
+                                    className="cursor-pointer bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
                                     disabled={
                                         loading || !editDescription.trim()
                                     }
@@ -237,7 +234,7 @@ const WorkDoneDetailPage = ({ params }: { params: { id: string } }) => {
                                 </button>
                                 <button
                                     onClick={cancelEdit}
-                                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                                    className="cursor-pointer bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
                                     disabled={loading}
                                 >
                                     Cancel
@@ -301,7 +298,22 @@ const WorkDoneDetailPage = ({ params }: { params: { id: string } }) => {
                     </div>
                 </div>
             </div>
+
+            {/* Custom Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <ConfirmationModal
+                    isOpen={showDeleteModal}
+                    title={"Delete Work Done"}
+                    message={`Are you sure you want to delete this work? This cannot be undone.`}
+                    confirmText="Delete"
+                    cancelText="Cancel"
+                    onConfirm={handleDelete}
+                    onCancel={() => setShowDeleteModal(false)}
+                    variant="danger"
+                />
+            )}
         </div>
     )
 }
+
 export default WorkDoneDetailPage

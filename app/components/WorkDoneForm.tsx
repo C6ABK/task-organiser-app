@@ -125,7 +125,7 @@ const WorkDoneForm = ({
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
+                    className="cursor-pointer w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
                 >
                     {loading ? "Logging..." : "Log Work Done"}
                 </button>
