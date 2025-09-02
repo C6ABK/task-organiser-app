@@ -147,16 +147,29 @@ const TaskDetailPage = () => {
         )
 
         try {
-            const res = await fetch(
-                `/api/tasks/${params.id}/next-actions/${actionId}`,
-                {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ completed: !currentStatus }),
-                }
-            )
+            const res = await fetch(`/api/next-actions/${actionId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ completed: !currentStatus }),
+            })
 
             if (res.ok) {
+                const updatedNextAction = await res.json()
+                console.log("Updated next action:", updatedNextAction) // Debug log
+
+                // Update with the actual response data (includes proper completedAt)
+                setNextActions((prevActions) =>
+                    prevActions.map((action) =>
+                        action.id === actionId
+                            ? {
+                                  ...action,
+                                  completed: updatedNextAction.completed,
+                                  completedAt: updatedNextAction.completedAt,
+                              }
+                            : action
+                    )
+                )
+
                 // If auto-complete is enabled and we just completed the last action,
                 // check if task should be auto-completed
                 if (!currentStatus && task?.autoComplete) {
