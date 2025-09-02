@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import ConfirmationModal from "@/app/components/ConfirmationModal" // Add this import
@@ -15,7 +15,8 @@ interface WorkDone {
     }
 }
 
-const WorkDoneDetailPage = ({ params }: { params: { id: string } }) => {
+const WorkDoneDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
+    const unwrappedParams = use(params)
     const [workDone, setWorkDone] = useState<WorkDone | null>(null)
     const [loading, setLoading] = useState(true)
     const [editing, setEditing] = useState(false)
@@ -41,7 +42,7 @@ const WorkDoneDetailPage = ({ params }: { params: { id: string } }) => {
 
         const fetchWorkDone = async () => {
             try {
-                const response = await fetch(`/api/work-done/${params.id}`)
+                const response = await fetch(`/api/work-done/${unwrappedParams.id}`)
                 if (response.ok) {
                     const data = await response.json()
                     setWorkDone(data)
@@ -58,7 +59,7 @@ const WorkDoneDetailPage = ({ params }: { params: { id: string } }) => {
         }
 
         fetchWorkDone()
-    }, [params.id, session])
+    }, [unwrappedParams.id, session])
 
     const handleEdit = async () => {
         if (!editDescription.trim()) {
@@ -70,7 +71,7 @@ const WorkDoneDetailPage = ({ params }: { params: { id: string } }) => {
         setError("")
 
         try {
-            const response = await fetch(`/api/work-done/${params.id}`, {
+            const response = await fetch(`/api/work-done/${unwrappedParams.id}`, {
                 method: "PATCH", // Change to PATCH
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ description: editDescription.trim() }),
@@ -98,7 +99,7 @@ const WorkDoneDetailPage = ({ params }: { params: { id: string } }) => {
         setLoading(true)
 
         try {
-            const response = await fetch(`/api/work-done/${params.id}`, {
+            const response = await fetch(`/api/work-done/${unwrappedParams.id}`, {
                 method: "DELETE",
             })
 
