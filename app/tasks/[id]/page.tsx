@@ -8,6 +8,7 @@ import NextActionForm from "@/app/components/NextActionForm"
 import WorkDoneForm from "@/app/components/WorkDoneForm"
 import NextActionCard from "@/app/components/NextActionCard"
 import WorkDoneCard from "@/app/components/WorkDoneCard"
+import TaskCompletionSection from "@/app/components/TaskCompletionSection"
 
 type TaskDetail = {
     id: string
@@ -16,6 +17,8 @@ type TaskDetail = {
     dueDate: string | null
     priority: boolean
     status: string
+    autoComplete: boolean
+    completedAt: string | null
     createdAt: string
     updatedAt: string
     category: {
@@ -42,61 +45,122 @@ type WorkDone = {
 }
 
 const TaskDetailPage = () => {
-    const [workDone, setWorkDone] = useState<WorkDone[]>([])
-    const [refreshWork, setRefreshWork] = useState(0)
-    const [nextActions, setNextActions] = useState<NextAction[]>([])
-    const [refreshActions, setRefreshActions] = useState(0)
+    // Consolidated state
     const [task, setTask] = useState<TaskDetail | null>(null)
+    const [nextActions, setNextActions] = useState<NextAction[]>([])
+    const [workDone, setWorkDone] = useState<WorkDone[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
+
+    // Refresh triggers
+    const [refreshTrigger, setRefreshTrigger] = useState(0)
+
     const params = useParams()
     const router = useRouter()
     const { data: session, status } = useSession()
 
+    // Helper function for completion stats
     const getCompletionStats = () => {
         if (nextActions.length === 0)
             return { percentage: 0, completed: 0, total: 0 }
-
         const completed = nextActions.filter(
             (action) => action.completed
         ).length
         const total = nextActions.length
         const percentage = Math.round((completed / total) * 100)
-
         return { percentage, completed, total }
     }
 
+    // Authentication check
     useEffect(() => {
         if (status === "loading") return
         if (!session) router.push("/signin")
     }, [session, status, router])
 
+    // Main data fetching - fetch everything together
     useEffect(() => {
-        const fetchNextActions = async () => {
-            if (!params.id || !session) return
+        const fetchAllData = async () => {
+            if (!params.id || !session || status === "loading") return
+
+            setLoading(true)
+            setError("")
 
             try {
-                const res = await fetch(`/api/tasks/${params.id}/next-actions`)
-                if (res.ok) {
-                    const data = await res.json()
-                    setNextActions(data.nextActions)
+                // Fetch all data in parallel
+                const [taskRes, actionsRes, workRes] = await Promise.all([
+                    fetch(`/api/tasks/${params.id}`),
+                    fetch(`/api/tasks/${params.id}/next-actions`),
+                    fetch(`/api/tasks/${params.id}/work-done`),
+                ])
+
+                if (taskRes.ok) {
+                    const taskData = await taskRes.json()
+                    setTask(taskData.task)
+                } else {
+                    setError("Task not found")
+                    setLoading(false)
+                    return
                 }
-            } catch (error) {
-                console.error("Failed to fetch next actions:", error)
+
+                if (actionsRes.ok) {
+                    const actionsData = await actionsRes.json()
+                    setNextActions(actionsData.nextActions)
+                }
+
+                if (workRes.ok) {
+                    const workData = await workRes.json()
+                    setWorkDone(workData.workDone)
+                }
+            } catch (err) {
+                console.error("Failed to fetch data:", err)
+                setError("Failed to load task data")
+            } finally {
+                setLoading(false)
             }
         }
 
-        fetchNextActions()
-    }, [params.id, session, refreshActions])
+        fetchAllData()
+    }, [params.id, session, status, refreshTrigger])
 
-    const handleActionCreated = () => {
-        setRefreshActions((prev) => prev + 1)
+    // Handlers
+    const handleRefresh = () => {
+        setRefreshTrigger((prev) => prev + 1)
+    }
+
+    const handleActionCreated = (newAction: NextAction) => {
+        // Optimistically add the new action to the UI
+        setNextActions((prev) => [...prev, newAction])
+    }
+
+    const handleTaskUpdated = (updatedTask: Partial<TaskDetail>) => {
+        // Optimistically update just the task fields that changed
+        setTask((prev) => (prev ? { ...prev, ...updatedTask } : null))
+    }
+
+    const handleWorkCreated = (newWork: WorkDone) => {
+        // Optimistically add the new work entry
+        setWorkDone((prev) => [newWork, ...prev])
     }
 
     const toggleActionComplete = async (
         actionId: string,
         currentStatus: boolean
     ) => {
+        // Optimistically update UI immediately
+        setNextActions((prevActions) =>
+            prevActions.map((action) =>
+                action.id === actionId
+                    ? {
+                          ...action,
+                          completed: !currentStatus,
+                          completedAt: !currentStatus
+                              ? new Date().toISOString()
+                              : null,
+                      }
+                    : action
+            )
+        )
+
         try {
             const res = await fetch(
                 `/api/tasks/${params.id}/next-actions/${actionId}`,
@@ -108,67 +172,80 @@ const TaskDetailPage = () => {
             )
 
             if (res.ok) {
-                // Update local state instead of refetching all actions
+                // If auto-complete is enabled and we just completed the last action,
+                // check if task should be auto-completed
+                if (!currentStatus && task?.autoComplete) {
+                    const updatedActions = nextActions.map((action) =>
+                        action.id === actionId
+                            ? { ...action, completed: true }
+                            : action
+                    )
+                    const allCompleted = updatedActions.every(
+                        (action) => action.completed
+                    )
+
+                    if (allCompleted) {
+                        // Optimistically update task status
+                        setTask((prev) =>
+                            prev
+                                ? {
+                                      ...prev,
+                                      status: "COMPLETED",
+                                      completedAt: new Date().toISOString(),
+                                  }
+                                : null
+                        )
+                    }
+                }
+            } else {
+                // Revert optimistic update on failure
                 setNextActions((prevActions) =>
                     prevActions.map((action) =>
                         action.id === actionId
-                            ? { ...action, completed: !currentStatus }
+                            ? {
+                                  ...action,
+                                  completed: currentStatus, // Revert
+                                  completedAt: currentStatus
+                                      ? new Date().toISOString()
+                                      : null,
+                              }
                             : action
                     )
                 )
-            } else {
                 console.error("Failed to update next action")
             }
         } catch (error) {
+            // Revert optimistic update on error
+            setNextActions((prevActions) =>
+                prevActions.map((action) =>
+                    action.id === actionId
+                        ? {
+                              ...action,
+                              completed: currentStatus, // Revert
+                              completedAt: currentStatus
+                                  ? new Date().toISOString()
+                                  : null,
+                          }
+                        : action
+                )
+            )
             console.error("Error updating next action:", error)
         }
     }
 
-    useEffect(() => {
-        const fetchWorkDone = async () => {
-            if (!params.id || !session) return
-
-            try {
-                const res = await fetch(`/api/tasks/${params.id}/work-done`)
-                if (res.ok) {
-                    const data = await res.json()
-                    setWorkDone(data.workDone)
-                }
-            } catch (error) {
-                console.error("Failed to fetch work done:", error)
-            }
-        }
-        fetchWorkDone()
-    }, [params.id, session, refreshWork])
-
-    const handleWorkCreated = () => {
-        setRefreshWork((prev) => prev + 1)
-    }
-
-    useEffect(() => {
-        const fetchTask = async () => {
-            try {
-                const res = await fetch(`/api/tasks/${params.id}`)
-                if (res.ok) {
-                    const data = await res.json()
-                    setTask(data.task)
-                } else {
-                    setError("Task not found")
-                }
-            } catch (err) {
-                console.error("Failed to fetch task:", err)
-                setError("Failed to load task")
-            }
-            setLoading(false)
-        }
-
-        if (params.id && session) {
-            fetchTask()
-        }
-    }, [params.id, session])
-
+    // Loading states
     if (status === "loading" || loading) {
-        return <div className="p-6">Loading...</div>
+        return (
+            <div className="max-w-4xl mx-auto p-6">
+                <div className="bg-white rounded-lg shadow-lg p-8">
+                    <div className="animate-pulse">
+                        <div className="h-8 bg-gray-200 rounded mb-4"></div>
+                        <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     if (!session) {
@@ -177,20 +254,43 @@ const TaskDetailPage = () => {
 
     if (error) {
         return (
-            <div className="p-6">
-                <div className="text-red-500 mb-4">{error}</div>
-                <button
-                    onClick={() => router.back()}
-                    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 cursor-pointer"
-                >
-                    Go Back
-                </button>
+            <div className="max-w-4xl mx-auto p-6">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                    <div className="text-red-800 font-semibold mb-2">Error</div>
+                    <div className="text-red-600 mb-4">{error}</div>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={handleRefresh}
+                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                        >
+                            Try Again
+                        </button>
+                        <button
+                            onClick={() => router.push("/dashboard")}
+                            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                        >
+                            Back to Dashboard
+                        </button>
+                    </div>
+                </div>
             </div>
         )
     }
 
     if (!task) {
-        return <div className="p-6">Task not found</div>
+        return (
+            <div className="max-w-4xl mx-auto p-6">
+                <div className="text-center py-12">
+                    <div className="text-gray-500 text-lg">Task not found</div>
+                    <button
+                        onClick={() => router.push("/dashboard")}
+                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                        Back to Dashboard
+                    </button>
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -199,7 +299,7 @@ const TaskDetailPage = () => {
             <div className="flex items-center justify-between mb-6">
                 <button
                     onClick={() => router.push("/dashboard")}
-                    className="flex items-center text-gray-600 hover:text-gray-800 cursor-pointer"
+                    className="flex items-center text-gray-600 hover:text-gray-800"
                 >
                     ← Back
                 </button>
@@ -272,22 +372,39 @@ const TaskDetailPage = () => {
                         </span>
                     </div>
 
-                    <div>
-                        <h3 className="font-semibold text-gray-700 mb-2">
-                            Last Updated
-                        </h3>
-                        <span>
-                            {new Date(task.updatedAt).toLocaleDateString()}
-                        </span>
-                    </div>
+                    {task.completedAt && (
+                        <div>
+                            <h3 className="font-semibold text-gray-700 mb-2">
+                                Completed
+                            </h3>
+                            <span className="text-green-600">
+                                {new Date(
+                                    task.completedAt
+                                ).toLocaleDateString()}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
-                {/* Next Actions & Work Done */}
+                {/* Task Completion Section */}
+                <TaskCompletionSection
+                    task={{
+                        id: task.id,
+                        status: task.status,
+                        autoComplete: task.autoComplete,
+                    }}
+                    nextActionsCount={nextActions.length}
+                    completedActionsCount={
+                        nextActions.filter((action) => action.completed).length
+                    }
+                    onTaskUpdated={handleRefresh}
+                />
+
+                {/* Next Actions */}
                 <div className="border-t pt-8">
                     {(() => {
                         const { percentage, completed, total } =
                             getCompletionStats()
-
                         return (
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center space-x-3">
@@ -321,10 +438,9 @@ const TaskDetailPage = () => {
                         )
                     })()}
 
-                    {/* Show existing next actions */}
                     {nextActions.length > 0 && (
                         <div className="space-y-3 mb-6">
-                            {nextActions.map((action: NextAction) => (
+                            {nextActions.map((action) => (
                                 <NextActionCard
                                     key={action.id}
                                     action={action}
@@ -335,13 +451,13 @@ const TaskDetailPage = () => {
                         </div>
                     )}
 
-                    {/* Add the form */}
                     <NextActionForm
                         taskId={task.id}
-                        onActionCreated={handleActionCreated}
+                        onActionCreated={handleRefresh}
                     />
                 </div>
 
+                {/* Work Done */}
                 <div className="border-t pt-8 mt-8">
                     <h2 className="text-xl font-semibold text-gray-800 mb-4">
                         Work Done ({workDone.length})
@@ -358,7 +474,7 @@ const TaskDetailPage = () => {
                     <WorkDoneForm
                         targetType="task"
                         targetId={task.id}
-                        onWorkCreated={handleWorkCreated}
+                        onWorkCreated={handleRefresh}
                     />
                 </div>
             </div>

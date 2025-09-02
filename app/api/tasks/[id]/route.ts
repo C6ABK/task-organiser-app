@@ -31,31 +31,49 @@ export async function DELETE(
 
 export async function PATCH(
     request: Request,
-    { params }: { params: Promise<{ id: string }>}
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorised"}, { status: 401 })
+        return NextResponse.json({ error: "Unauthorised" }, { status: 401 })
     }
 
     try {
-        const { status } = await request.json()
+        const { status, autoComplete } = await request.json()
 
-        const updatedTask = await prisma.task.update({
+        // Verify the user owns the task
+        const task = await prisma.task.findUnique({
             where: {
                 id: id,
                 userId: session.user.id
+            }
+        })
+
+        if (!task) {
+            return NextResponse.json({ error: "Task not found" }, { status: 404 })
+        }
+
+        const updatedTask = await prisma.task.update({
+            where: { id },
+            data: { 
+                status,
+                completedAt: status === "COMPLETED" ? new Date() : null,
+                autoComplete: autoComplete !== undefined ? autoComplete : undefined
             },
-            data: { status, completedAt: status === "COMPLETED" ? new Date(): null },
-            include: { category: true }
+            include: {
+                category: true
+            }
         })
 
         return NextResponse.json({ task: updatedTask })
     } catch (error) {
         console.error("Error updating task:", error)
-        return NextResponse.json({ error: "Failed to update task"}, {status: 500})
+        return NextResponse.json(
+            { error: "Failed to update task" },
+            { status: 500 }
+        )
     }
 }
 

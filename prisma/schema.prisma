@@ -37,6 +37,7 @@ model Task {
   priority    Boolean      @default(false)
   dueDate     DateTime?
   status      TaskStatus   @default(PENDING)
+  autoComplete Boolean    @default(true)
 
   @@index([userId])
   @@index([categoryId])

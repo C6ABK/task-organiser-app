@@ -44,9 +44,9 @@ export async function GET(
 
 export async function PATCH(
     request: Request,
-    { params }: { params: Promise<{ id: string }>}
+    { params }: { params: Promise<{ id: string; actionId: string }>}
 ) {
-    const { id } = await params
+    const { id, actionId } = await params
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -55,28 +55,53 @@ export async function PATCH(
 
     try {
         const { completed } = await request.json()
-
-        // Verify user owns this action through the task
-        const nextAction = await prisma.nextAction.findUnique({
-            where: { id },
+    
+        const task = await prisma.task.findUnique({
+            where: {
+                id: id,
+                userId: session.user.id
+            },
             include: {
-                task: {
-                    select: { userId: true}
-                }
+                nextActions: true
             }
         })
 
-        if (!nextAction || nextAction.task.userId !== session.user.id) {
-            return NextResponse.json({ error: "Next action not found"}, { status: 404 })
+        if (!task) {
+            return NextResponse.json({ error: "Task not found "}, { status: 404 })
         }
 
-        const updatedAction = await prisma.nextAction.update({
-            where: { id },
-            data: { completed, completedAt: completed ? new Date() : null }
+        // Update the next action
+        await prisma.nextAction.update({
+            where: {
+                id: actionId,
+                taskId: id
+            },
+            data: {
+                completed,
+                completedAt: completed ? new Date() : null
+            }
         })
 
-        return NextResponse.json({ nextAction: updatedAction})
-    } catch (error) {
+        // Check if we should auto-complete the task
+        if (completed && task.autoComplete && task.status !== "COMPLETED") {
+            const updatedActions = task.nextActions.map(action =>
+                action.id === actionId ? { ...action, completed: true } : action
+            )
+            const allCompleted = updatedActions.every(action => action.completed)
+
+            if (allCompleted) {
+                await prisma.task.update({
+                    where: { id: task.id },
+                    data: {
+                        status: "COMPLETED",
+                        completedAt: new Date()
+                    }
+                })
+            }
+        }
+
+        return NextResponse.json({ success: true})
+    } catch(error){
         console.error("Error updating next action:", error)
         return NextResponse.json(
             { error: "Failed to update next action" },
