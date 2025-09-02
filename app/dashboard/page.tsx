@@ -4,11 +4,11 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 
 import CurrentActions from "../components/CurrentActions"
-import CreateAction from "../components/CreateAction"
+import CreateTask from "../components/CreateTask"
 
 const DashboardPage = () => {
     const [refreshTrigger, setRefreshTrigger] = useState(0)
-    const [isCreateActionOpen, setIsCreateActionOpen] = useState(false)
+    const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
     const { data: session, status } = useSession()
     const router = useRouter()
 
@@ -19,7 +19,7 @@ const DashboardPage = () => {
 
     const handleTaskCreated = () => {
         setRefreshTrigger((prev) => prev + 1)
-        setIsCreateActionOpen(false)
+        setIsCreateTaskOpen(false)
     }
 
     if (status === "loading") {
@@ -35,22 +35,22 @@ const DashboardPage = () => {
             {/* Mobile */}
             <div className="lg:hidden mb-6">
                 <button
-                    onClick={() => setIsCreateActionOpen(!isCreateActionOpen)}
+                    onClick={() => setIsCreateTaskOpen(!isCreateTaskOpen)}
                     className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                     <span>Create New Task</span>
                     <span className="ml-4">
-                        {isCreateActionOpen ? "−" : "+"}
+                        {isCreateTaskOpen ? "−" : "+"}
                     </span>
                 </button>
 
-                {/* Expand createAction for mobile */}
+                {/* Expand createTask for mobile */}
                 <div
                     className={`overflow-hidden transition-all duration-300 ${
-                        isCreateActionOpen ? "max-h-screen mt-4" : "max-h-0"
+                        isCreateTaskOpen ? "max-h-screen mt-4" : "max-h-0"
                     }`}
                 >
-                    <CreateAction onTaskCreated={handleTaskCreated} />
+                    <CreateTask onTaskCreated={handleTaskCreated} />
                 </div>
             </div>
 
@@ -63,7 +63,7 @@ const DashboardPage = () => {
 
                 {/* Large screens: Right side, Mobile: Hidden (shown above) */}
                 <div className="lg:w-1/3 w-full hidden lg:block order-1 lg:order-2">
-                    <CreateAction onTaskCreated={handleTaskCreated} />
+                    <CreateTask onTaskCreated={handleTaskCreated} />
                 </div>
             </div>
         </div>

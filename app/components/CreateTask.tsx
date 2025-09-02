@@ -2,17 +2,19 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { Task, Category } from "../types"
 
-type Category = {
-    id: string
-    name: string
+type CreateTaskProps = {
+    onTaskCreated?: (task: Task) => void
+    showTitle?: boolean
+    submitButtonText?: string
 }
 
-type CreateActionProps = {
-    onTaskCreated?: () => void
-}
-
-const CreateAction = ({ onTaskCreated }: CreateActionProps) => {
+const CreateTask = ({
+    onTaskCreated,
+    showTitle = true,
+    submitButtonText = "Create Task",
+}: CreateTaskProps) => {
     const [form, setForm] = useState({
         title: "",
         description: "",
@@ -69,6 +71,8 @@ const CreateAction = ({ onTaskCreated }: CreateActionProps) => {
             })
 
             if (res.ok) {
+                const data = await res.json()
+
                 setForm({
                     title: "",
                     description: "",
@@ -76,11 +80,14 @@ const CreateAction = ({ onTaskCreated }: CreateActionProps) => {
                     priority: false,
                     dueDate: "",
                 })
-                
-                if(onTaskCreated){
-                    onTaskCreated()
+
+                if (onTaskCreated) {
+                    onTaskCreated(data.task)
                 }
-                router.refresh()
+
+                if (!onTaskCreated) {
+                    router.refresh()
+                }
             } else {
                 const data = await res.json()
                 setError(data.error || "Failed to create task")
@@ -95,7 +102,10 @@ const CreateAction = ({ onTaskCreated }: CreateActionProps) => {
 
     return (
         <div className="bg-white p-6 rounded-lg shadow">
-            <h1 className="font-bold text-2xl mb-4">Create New Task</h1>
+            {/* Use showTitle prop */}
+            {showTitle && (
+                <h1 className="font-bold text-2xl mb-4">Create New Task</h1>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -209,10 +219,11 @@ const CreateAction = ({ onTaskCreated }: CreateActionProps) => {
                     disabled={loading}
                     className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
                 >
-                    {loading ? "Creating..." : "Create Task"}
+                    {/* Use submitButtonText prop */}
+                    {loading ? "Creating..." : submitButtonText}
                 </button>
             </form>
         </div>
     )
 }
-export default CreateAction
+export default CreateTask

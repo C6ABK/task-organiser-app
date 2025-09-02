@@ -23,6 +23,9 @@ const Navbar = () => {
                         <Link href="/dashboard" className="px-4 py-2 rounded hover:bg-gray-800">
                             Dashboard
                         </Link>
+                        <Link href="/bulk" className="px-4 py-2 rounded hover:bg-gray-800">
+                            Bulk Operations
+                        </Link>
                         <button
                             onClick={() => signOut()}
                             className="px-4 py-2 rounded hover:bg-gray-800"
