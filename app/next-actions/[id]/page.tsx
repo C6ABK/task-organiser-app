@@ -6,7 +6,6 @@ import { useSession } from "next-auth/react"
 import WorkDoneForm from "@/app/components/WorkDoneForm"
 import ConfirmationModal from "@/app/components/ConfirmationModal"
 import WorkDoneCard from "@/app/components/WorkDoneCard"
-import next from "next"
 
 type NextActionDetail = {
     id: string

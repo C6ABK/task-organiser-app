@@ -75,8 +75,11 @@ const SignInPage = () => {
                 </button>
             </form>
             <div className="mt-4 text-center">
-                <Link href="/signup" className="text-gray-600 hover:text-gray-900">
-                    Don't have an account? Sign up
+                <Link
+                    href="/signup"
+                    className="text-gray-600 hover:text-gray-900"
+                >
+                    Don&apos;t have an account? Sign up
                 </Link>
             </div>
         </div>
