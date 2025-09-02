@@ -1,5 +1,7 @@
 "use client"
 
+import { useRouter } from "next/navigation"
+
 type WorkDoneCardProps = {
     work: {
         id: string
@@ -16,8 +18,17 @@ const WorkDoneCard = ({
     showActions = false,
     onDelete,
 }: WorkDoneCardProps) => {
+    const router = useRouter()
+
+    const handleClick = () => {
+        router.push(`/work-done/${work.id}`)
+    }
+
     return (
-        <div className="bg-gray-50 p-4 rounded border-l-4 border-green-500">
+        <div
+            onClick={handleClick}
+            className="bg-gray-50 p-4 rounded border-l-4 border-green-500"
+        >
             <div className="flex justify-between items-start mb-2">
                 <p className="text-gray-800 flex-1">{work.description}</p>
                 {showActions && onDelete && (
