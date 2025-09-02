@@ -44,9 +44,9 @@ export async function GET(
 
 export async function PATCH(
     request: Request,
-    { params }: { params: Promise<{ id: string; actionId: string }>}
+    { params }: { params: Promise<{ id: string }>}
 ) {
-    const { id, actionId } = await params
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -55,52 +55,79 @@ export async function PATCH(
 
     try {
         const { completed } = await request.json()
+        
+        console.log(`Updating next action ${id} - completed: ${completed}`) // Debug log
     
-        const task = await prisma.task.findUnique({
-            where: {
-                id: id,
-                userId: session.user.id
-            },
+        // First, find the next action and verify ownership
+        const nextAction = await prisma.nextAction.findUnique({
+            where: { id },
             include: {
-                nextActions: true
+                task: {
+                    select: {
+                        id: true,
+                        userId: true,
+                        autoComplete: true,
+                        status: true
+                    }
+                }
             }
         })
 
-        if (!task) {
-            return NextResponse.json({ error: "Task not found "}, { status: 404 })
+        if (!nextAction || nextAction.task.userId !== session.user.id) {
+            return NextResponse.json({ error: "Next action not found" }, { status: 404 })
         }
 
-        // Update the next action
-        await prisma.nextAction.update({
-            where: {
-                id: actionId,
-                taskId: id
-            },
+        // Update the next action with full data return
+        const updatedNextAction = await prisma.nextAction.update({
+            where: { id },
             data: {
                 completed,
                 completedAt: completed ? new Date() : null
+            },
+            include: { // Add this to include all fields in response
+                task: {
+                    select: {
+                        id: true,
+                        title: true
+                    }
+                }
             }
         })
 
+        console.log(`Database update result:`, {
+    id: updatedNextAction.id,
+    completed: updatedNextAction.completed,
+    completedAt: updatedNextAction.completedAt,
+    timestamp: new Date().toISOString()
+})
+
         // Check if we should auto-complete the task
-        if (completed && task.autoComplete && task.status !== "COMPLETED") {
-            const updatedActions = task.nextActions.map(action =>
-                action.id === actionId ? { ...action, completed: true } : action
+        if (completed && nextAction.task.autoComplete && nextAction.task.status !== "COMPLETED") {
+            const allTaskNextActions = await prisma.nextAction.findMany({
+                where: { taskId: nextAction.task.id }
+            })
+            
+            // Check if all next actions are now completed
+            const allCompleted = allTaskNextActions.every(action => 
+                action.id === id ? completed : action.completed
             )
-            const allCompleted = updatedActions.every(action => action.completed)
 
             if (allCompleted) {
                 await prisma.task.update({
-                    where: { id: task.id },
+                    where: { id: nextAction.task.id },
                     data: {
                         status: "COMPLETED",
                         completedAt: new Date()
                     }
                 })
+                console.log(`Auto-completed task: ${nextAction.task.id}`) // Debug log
             }
         }
 
-        return NextResponse.json({ success: true})
+        return NextResponse.json(updatedNextAction) // ✅ Now includes completedAt
+
+        // Remove this unreachable line:
+        // return NextResponse.json({ success: true})
     } catch(error){
         console.error("Error updating next action:", error)
         return NextResponse.json(
