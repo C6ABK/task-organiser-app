@@ -6,9 +6,10 @@ import { prisma } from "@/lib/prisma"
 // GET - Fetch work done details
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params
         const session = await getServerSession(authOptions)
         
         if (!session) {
@@ -17,7 +18,7 @@ export async function GET(
 
         const workDone = await prisma.workDone.findFirst({
             where: {
-                id: params.id,
+                id: id,
                 task: {
                     userId: session.user.id,
                 },
@@ -43,12 +44,13 @@ export async function GET(
     }
 }
 
-// PUT - Update work done
-export async function PUT(
+// PATCH - Update work done
+export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params
         const session = await getServerSession(authOptions)
         
         if (!session) {
@@ -64,7 +66,7 @@ export async function PUT(
         // Check if work done exists and belongs to user
         const existingWorkDone = await prisma.workDone.findFirst({
             where: {
-                id: params.id,
+                id: id,
                 task: {
                     userId: session.user.id,
                 },
@@ -76,7 +78,7 @@ export async function PUT(
         }
 
         const updatedWorkDone = await prisma.workDone.update({
-            where: { id: params.id },
+            where: { id: id },
             data: {
                 description: description.trim(),
             },
@@ -100,9 +102,10 @@ export async function PUT(
 // DELETE - Delete work done
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params
         const session = await getServerSession(authOptions)
         
         if (!session) {
@@ -112,7 +115,7 @@ export async function DELETE(
         // Check if work done exists and belongs to user
         const existingWorkDone = await prisma.workDone.findFirst({
             where: {
-                id: params.id,
+                id: id,
                 task: {
                     userId: session.user.id,
                 },
@@ -124,7 +127,7 @@ export async function DELETE(
         }
 
         await prisma.workDone.delete({
-            where: { id: params.id },
+            where: { id: id },
         })
 
         return NextResponse.json({ message: "Work done deleted successfully" })
