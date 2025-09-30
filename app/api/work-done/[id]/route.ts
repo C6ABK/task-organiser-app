@@ -19,17 +19,14 @@ export async function GET(
         const workDone = await prisma.workDone.findFirst({
             where: {
                 id: id,
-                task: {
-                    userId: session.user.id,
-                },
+                OR: [
+                    { task: { userId: session.user.id } },
+                    { nextAction: { task: { userId: session.user.id } } }
+                ]
             },
             include: {
-                task: {
-                    select: {
-                        id: true,
-                        title: true,
-                    },
-                },
+                task: { select: { id: true, title: true } },
+                nextAction: { select: { id: true, title: true } }
             },
         })
 
@@ -67,9 +64,10 @@ export async function PATCH(
         const existingWorkDone = await prisma.workDone.findFirst({
             where: {
                 id: id,
-                task: {
-                    userId: session.user.id,
-                },
+                OR: [
+                    { task: { userId: session.user.id } },
+                    { nextAction: { task: { userId: session.user.id } } }
+                ]
             },
         })
 
@@ -83,12 +81,8 @@ export async function PATCH(
                 description: description.trim(),
             },
             include: {
-                task: {
-                    select: {
-                        id: true,
-                        title: true,
-                    },
-                },
+                task: { select: { id: true, title: true } },
+                nextAction: { select: { id: true, title: true } }
             },
         })
 
@@ -116,9 +110,10 @@ export async function DELETE(
         const existingWorkDone = await prisma.workDone.findFirst({
             where: {
                 id: id,
-                task: {
-                    userId: session.user.id,
-                },
+                OR: [
+                    { task: { userId: session.user.id } },
+                    { nextAction: { task: { userId: session.user.id } } }
+                ]
             },
         })
 

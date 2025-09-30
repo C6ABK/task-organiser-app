@@ -141,7 +141,8 @@ const NextActionDetailPage = () => {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <button
-                    onClick={() => router.back()}
+                
+                    onClick={() => router.push(`/tasks/${nextAction?.task?.id}`)}
                     className="flex items-center text-gray-600 hover:text-gray-800 cursor-pointer"
                 >
                     ← Back to {nextAction.task.title}
@@ -245,6 +246,7 @@ const NextActionDetailPage = () => {
                                 <WorkDoneCard 
                                     key={work.id}
                                     work={work}
+                                    onClick={() => router.push(`/work-done/${work.id}`)}
                                 />
                             ))}
                         </div>

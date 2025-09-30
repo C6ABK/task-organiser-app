@@ -9,13 +9,21 @@ interface WorkDone {
     id: string
     description: string
     completedAt: string
-    taskId: string
-    task: {
+    task?: {
+        id: string
+        title: string
+    }
+    nextAction?: {
+        id: string
         title: string
     }
 }
 
-const WorkDoneDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
+const WorkDoneDetailPage = ({
+    params,
+}: {
+    params: Promise<{ id: string }>
+}) => {
     const unwrappedParams = use(params)
     const [workDone, setWorkDone] = useState<WorkDone | null>(null)
     const [loading, setLoading] = useState(true)
@@ -42,7 +50,9 @@ const WorkDoneDetailPage = ({ params }: { params: Promise<{ id: string }> }) => 
 
         const fetchWorkDone = async () => {
             try {
-                const response = await fetch(`/api/work-done/${unwrappedParams.id}`)
+                const response = await fetch(
+                    `/api/work-done/${unwrappedParams.id}`
+                )
                 if (response.ok) {
                     const data = await response.json()
                     setWorkDone(data)
@@ -71,11 +81,16 @@ const WorkDoneDetailPage = ({ params }: { params: Promise<{ id: string }> }) => 
         setError("")
 
         try {
-            const response = await fetch(`/api/work-done/${unwrappedParams.id}`, {
-                method: "PATCH", // Change to PATCH
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ description: editDescription.trim() }),
-            })
+            const response = await fetch(
+                `/api/work-done/${unwrappedParams.id}`,
+                {
+                    method: "PATCH", // Change to PATCH
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        description: editDescription.trim(),
+                    }),
+                }
+            )
 
             if (response.ok) {
                 const updatedWorkDone = await response.json()
@@ -99,12 +114,15 @@ const WorkDoneDetailPage = ({ params }: { params: Promise<{ id: string }> }) => 
         setLoading(true)
 
         try {
-            const response = await fetch(`/api/work-done/${unwrappedParams.id}`, {
-                method: "DELETE",
-            })
+            const response = await fetch(
+                `/api/work-done/${unwrappedParams.id}`,
+                {
+                    method: "DELETE",
+                }
+            )
 
             if (response.ok) {
-                router.push(`/tasks/${workDone?.taskId}`)
+                router.push(`/tasks/${workDone?.task?.id}`)
             } else {
                 setError("Failed to delete work done item")
             }
@@ -171,12 +189,26 @@ const WorkDoneDetailPage = ({ params }: { params: Promise<{ id: string }> }) => 
             {/* Header */}
             <div className="mb-6">
                 <div className="flex items-center text-sm text-gray-500 mb-2">
-                    <button
-                        onClick={() => router.push(`/tasks/${workDone.taskId}`)}
-                        className="hover:text-gray-700"
-                    >
-                        {workDone.task.title}
-                    </button>
+                    {workDone.task?.id && (
+                        <button
+                            onClick={() =>
+                                router.push(`/tasks/${workDone?.task?.id}`)
+                            }
+                            className="hover:text-gray-700 cursor-pointer"
+                        >
+                            {workDone?.task?.title}
+                        </button>
+                    )}
+                    {workDone.nextAction?.id && (
+                        <button
+                            onClick={() =>
+                                router.push(`/next-actions/${workDone?.nextAction?.id}`)
+                            }
+                            className="hover:text-gray-700 cursor-pointer"
+                        >
+                            {workDone?.nextAction?.title}
+                        </button>
+                    )}
                     <span className="mx-2">→</span>
                     <span>Work Done</span>
                 </div>
@@ -272,30 +304,44 @@ const WorkDoneDetailPage = ({ params }: { params: Promise<{ id: string }> }) => 
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">
                         Details
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span className="font-medium text-gray-700">
-                                Completed:
-                            </span>
-                            <span className="ml-2 text-gray-600">
-                                {new Date(
-                                    workDone.completedAt
-                                ).toLocaleString()}
-                            </span>
-                        </div>
-                        <div>
-                            <span className="font-medium text-gray-700">
-                                Task:
-                            </span>
-                            <button
-                                onClick={() =>
-                                    router.push(`/tasks/${workDone.taskId}`)
-                                }
-                                className="ml-2 text-blue-600 hover:text-blue-800 underline"
-                            >
-                                {workDone.task.title}
-                            </button>
-                        </div>
+                    <div className="flex text-sm">
+                        {workDone.task?.id && (
+                            <div>
+                                <span className="font-medium text-gray-700">
+                                    Task:
+                                </span>
+                                <button
+                                    onClick={() =>
+                                        router.push(
+                                            `/tasks/${workDone?.task?.id}`
+                                        )
+                                    }
+                                    className="ml-2 text-blue-600 hover:text-blue-800 underline cursor-pointer"
+                                >
+                                    {workDone?.task?.title}
+                                </button>
+                            </div>
+                        )}
+
+                        {workDone.nextAction?.id && (
+                            <div>
+                                <span className="font-medium text-gray-700">
+                                    Next Action:
+                                </span>
+                                {workDone.nextAction?.title && (
+                                    <button
+                                        onClick={() =>
+                                            router.push(
+                                                `/next-actions/${workDone?.nextAction?.id}`
+                                            )
+                                        }
+                                        className="underline text-purple-600 ml-2 cursor-pointer"
+                                    >
+                                        {workDone.nextAction.title}
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

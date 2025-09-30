@@ -1,72 +1,79 @@
-"use client"
-import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
-
-import CurrentActions from "../components/CurrentActions"
-import CreateTask from "../components/CreateTask"
-
 const DashboardPage = () => {
-    const [refreshTrigger, setRefreshTrigger] = useState(0)
-    const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
-    const { data: session, status } = useSession()
-    const router = useRouter()
-
-    useEffect(() => {
-        if (status === "loading") return
-        if (!session) router.push("/signin")
-    }, [session, status, router])
-
-    const handleTaskCreated = () => {
-        setRefreshTrigger((prev) => prev + 1)
-        setIsCreateTaskOpen(false)
-    }
-
-    if (status === "loading") {
-        return <div>Loading...</div>
-    }
-
-    if (!session) {
-        return <div>Redirecting...</div>
-    }
-
-    return (
-        <div className="w-full min-h-screen p-2">
-            {/* Mobile */}
-            <div className="lg:hidden mb-6">
-                <button
-                    onClick={() => setIsCreateTaskOpen(!isCreateTaskOpen)}
-                    className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                    <span>Create New Task</span>
-                    <span className="ml-4">
-                        {isCreateTaskOpen ? "−" : "+"}
-                    </span>
-                </button>
-
-                {/* Expand createTask for mobile */}
-                <div
-                    className={`overflow-hidden transition-all duration-300 ${
-                        isCreateTaskOpen ? "max-h-screen mt-4" : "max-h-0"
-                    }`}
-                >
-                    <CreateTask onTaskCreated={handleTaskCreated} />
-                </div>
-            </div>
-
-            {/* Desktop and Mobile layout */}
-            <div className="flex flex-col lg:flex-row lg:space-x-6">
-                {/* Large screens: Left side, Mobile: Bottom */}
-                <div className="lg:w-2/3 w-full order-2 lg:order-1">
-                    <CurrentActions key={refreshTrigger} />
-                </div>
-
-                {/* Large screens: Right side, Mobile: Hidden (shown above) */}
-                <div className="lg:w-1/3 w-full hidden lg:block order-1 lg:order-2">
-                    <CreateTask onTaskCreated={handleTaskCreated} />
-                </div>
-            </div>
-        </div>
-    )
+  return (
+    <div className="p-8 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Dashboard Feature Ideas</h1>
+      <ul className="space-y-4">
+        <li>
+          <strong>Progress Bars</strong>
+          <ul className="list-disc ml-6">
+            <li>Overall Task Completion: Percentage of tasks completed vs. total.</li>
+            <li>Next Actions Progress: Progress bar for next actions completed per task.</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Key Stats</strong>
+          <ul className="list-disc ml-6">
+            <li>Tasks: Total, open, completed, overdue</li>
+            <li>Next Actions: Total, open, completed, high priority</li>
+            <li>Work Done: Total entries, work done this week/month, total hours logged</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Timeframe Summaries</strong>
+          <ul className="list-disc ml-6">
+            <li>Work done this week/month (count and hours spent)</li>
+            <li>Tasks completed this week/month (count)</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Activity Feed</strong>
+          <ul className="list-disc ml-6">
+            <li>Recent work done entries (with timestamps)</li>
+            <li>Recently completed tasks/next actions</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Focus/High Priority Section</strong>
+          <ul className="list-disc ml-6">
+            <li>List of high priority tasks/next actions needing attention</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Charts &amp; Visuals</strong>
+          <ul className="list-disc ml-6">
+            <li>Pie chart: Task status breakdown (open, in progress, completed)</li>
+            <li>Bar chart: Work done per week/month</li>
+            <li>Line chart: Productivity trend over time</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Quick Actions</strong>
+          <ul className="list-disc ml-6">
+            <li>Button to add a new task, next action, or work done</li>
+            <li>Button to start daily review</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Upcoming Deadlines</strong>
+          <ul className="list-disc ml-6">
+            <li>List of tasks/next actions due soon or overdue</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Personal Bests</strong>
+          <ul className="list-disc ml-6">
+            <li>Most productive day/week</li>
+            <li>Longest streak of completed tasks</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Search &amp; Filter</strong>
+          <ul className="list-disc ml-6">
+            <li>Quick search bar for tasks, next actions, work done</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  )
 }
 export default DashboardPage

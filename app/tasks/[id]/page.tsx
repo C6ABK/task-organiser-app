@@ -464,7 +464,7 @@ const TaskDetailPage = () => {
                     {workDone.length > 0 && (
                         <div className="space-y-3 mb-6">
                             {workDone.map((work) => (
-                                <WorkDoneCard key={work.id} work={work} />
+                                <WorkDoneCard key={work.id} work={work} onClick={() => router.push(`/work-done/${work.id}`)}/>
                             ))}
                         </div>
                     )}
