@@ -41,7 +41,16 @@ export async function PATCH(
     }
 
     try {
-        const { status, autoComplete } = await request.json()
+        const { status, autoComplete, reviewOn } = await request.json()
+
+        let reviewOnDate: Date | undefined = undefined
+        if(reviewOn !== undefined){
+            // Convery YYYY-MM-DD to ISO Datetime
+            reviewOnDate = new Date(reviewOn)
+            if (isNaN(reviewOnDate.getTime())) {
+                return NextResponse.json({ error: "Invalid review date" }, { status: 400 })
+            }
+        }
 
         // Verify the user owns the task
         const task = await prisma.task.findUnique({
@@ -60,7 +69,8 @@ export async function PATCH(
             data: { 
                 status,
                 completedAt: status === "COMPLETED" ? new Date() : null,
-                autoComplete: autoComplete !== undefined ? autoComplete : undefined
+                autoComplete: autoComplete !== undefined ? autoComplete : undefined,
+                reviewOn: reviewOnDate !== undefined ? reviewOnDate : undefined
             },
             include: {
                 category: true
