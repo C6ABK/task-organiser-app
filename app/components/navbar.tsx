@@ -26,6 +26,9 @@ const Navbar = () => {
                         <Link href="/tempdashboard" className="px-4 py-2 rounded hover:bg-gray-800">
                             Temp Dashboard
                         </Link>
+                        <Link href="/review" className="px-4 py-2 rounded hover:bg-gray-800">
+                            Review
+                        </Link>
                         <Link href="/bulk" className="px-4 py-2 rounded hover:bg-gray-800">
                             Bulk Operations
                         </Link>
